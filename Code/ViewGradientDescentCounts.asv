@@ -1,0 +1,13 @@
+function ViewGradientDescentCounts(window)
+%VIEWGRADIENTDESCENTCOUNTS Summary of this function goes here
+%   Detailed explanation goes here
+    errorImg = zeros(window.WinSz, window.WinSz);
+    for y = 1:window.WinSz
+        for x = 1:window.WinSz
+            errorImg(y, x) = window.Trajectories(y,x).Error;
+        end
+    end
+
+    
+end
+
