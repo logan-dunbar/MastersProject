@@ -16,6 +16,8 @@ function FindPeaks(obj)
                 end
             end
         end
+        
+        %could set the MaxStopCountTrajectory here
     end
 end
 

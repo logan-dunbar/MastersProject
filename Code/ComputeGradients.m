@@ -21,16 +21,6 @@ windowCount = size(obj.Windows, 2);
                 error_3_2 = error_2_2;
                 error_3_3 = error_2_2;
 
-                %                 error_1_1 = obj.Windows(j).Trajectories(y-1, x-1);
-                %                 error_1_2 = obj.Windows(j).Trajectories(y-1, x  );
-                %                 error_1_3 = obj.Windows(j).Trajectories(y-1, x+1);
-                %                 error_2_1 = obj.Windows(j).Trajectories(y,   x-1);
-                %                 error_2_2 = obj.Windows(j).Trajectories(y,   x  );
-                %                 error_2_3 = obj.Windows(j).Trajectories(y,   x+1);
-                %                 error_3_1 = obj.Windows(j).Trajectories(y+1, x-1);
-                %                 error_3_2 = obj.Windows(j).Trajectories(y+1, x  );
-                %                 error_3_3 = obj.Windows(j).Trajectories(y+1, x+1);
-
                 if (y == 1)
                     if (x == 1)
                         error_2_3 = obj.Windows(j).Trajectories(y,   x+1).Error;
@@ -99,32 +89,6 @@ windowCount = size(obj.Windows, 2);
                 trajectory.Gradients(8) = error_2_2 - error_3_3;
             end
         end
-
-%         for y = 2:obj.WindowSize - 1
-%             for x = 2:obj.WindowSize - 1
-%                 trajectory = obj.Windows(j).Trajectories(y,   x  );
-%                 
-%                 error_2_2 = trajectory.Error;
-%                 error_1_1 = obj.Windows(j).Trajectories(y-1, x-1).Error;
-%                 error_1_2 = obj.Windows(j).Trajectories(y-1, x  ).Error;
-%                 error_1_3 = obj.Windows(j).Trajectories(y-1, x+1).Error;
-%                 error_2_1 = obj.Windows(j).Trajectories(y,   x-1).Error;
-%                 error_2_3 = obj.Windows(j).Trajectories(y,   x+1).Error;
-%                 error_3_1 = obj.Windows(j).Trajectories(y+1, x-1).Error;
-%                 error_3_2 = obj.Windows(j).Trajectories(y+1, x  ).Error;
-%                 error_3_3 = obj.Windows(j).Trajectories(y+1, x+1).Error;
-% 
-%                 trajectory.Gradients(1) = error_2_2 - error_1_1;
-%                 trajectory.Gradients(2) = error_2_2 - error_1_2;
-%                 trajectory.Gradients(3) = error_2_2 - error_1_3;
-%                 trajectory.Gradients(4) = error_2_2 - error_2_1;
-%                 %middle
-%                 trajectory.Gradients(5) = error_2_2 - error_2_3;
-%                 trajectory.Gradients(6) = error_2_2 - error_3_1;
-%                 trajectory.Gradients(7) = error_2_2 - error_3_2;
-%                 trajectory.Gradients(8) = error_2_2 - error_3_3;
-%             end
-%         end
     end
 end
 
