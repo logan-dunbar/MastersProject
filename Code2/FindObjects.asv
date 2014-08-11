@@ -1,0 +1,8 @@
+function [objects] = FindObjects(video, windowSize)
+%FindObjects Computes temporally coherent objects from a given video and
+%windowSize
+
+trajWindow = TrajectoryWindow(windowSize);
+
+end
+
