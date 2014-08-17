@@ -1,0 +1,9 @@
+function TrajInds = CreateTrajectoryIndicies(winSz)
+%CREATETRAJECTORYINDICIES Creates the indices for each trajectory for the
+%given window size
+
+TrajInds(winSz(1)*winSz(2), winSz(3)) = 0;
+
+
+end
+

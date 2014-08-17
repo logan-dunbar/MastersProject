@@ -1,4 +1,4 @@
-function ComputeGradients(obj)
+function ComputeGradients_old(obj)
 %COMPUTEGRADIENTS Summary of this function goes here
 %   Detailed explanation goes here
 
