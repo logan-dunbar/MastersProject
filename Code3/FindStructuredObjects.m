@@ -43,9 +43,12 @@ end
 SeedPixels = [];
 
 for t = 1+tHalfWin:vidSz(3)-tHalfWin
+    tic;
+    disp(['T: ', num2str(t-tHalfWin), ' of ', num2str(pixelsSize(3))]);
     tPixInd = t - tHalfWin;
     
     for x = 1+xHalfWin:vidSz(2)-xHalfWin
+    disp(['  X: ', num2str(x-xHalfWin), ' of ', num2str(pixelsSize(2))]);
             xPixInd = x - xHalfWin;
             
         for y = 1+yHalfWin:vidSz(1)-yHalfWin
@@ -58,8 +61,16 @@ for t = 1+tHalfWin:vidSz(3)-tHalfWin
             
             for i = 1:trajIndsCount
                 trajPixelVals = windowVideo(Window.TrajInds(i,:));
-                Pixels(pixInd).ErrorMap(i) = ComputeError(video(x, y, t), trajPixelVals);
+                Pixels(pixInd).ErrorMap(i) = ComputeError(video(y, x, t), trajPixelVals);
             end
+            
+%             pixel = Pixels(pixInd);
+%             error = zeros(trajIndsCount);
+%             parfor i = 1:trajIndsCount
+%                 trajPixelVals = windowVideo(Window.TrajInds(i,:));
+%                 error(i) = ComputeError(video(x, y, t), trajPixelVals);
+%             end
+%             pixel.ErrorMap = error;
             
             for i = 1:trajIndsCount
                 pixelError = Pixels(pixInd).ErrorMap(i);
@@ -78,11 +89,18 @@ for t = 1+tHalfWin:vidSz(3)-tHalfWin
             end
         end
     end
+    
+    loopTime = toc;
+    timeLeft = (pixelsSize(3) - (t-tHalfWin))*loopTime;
+    
+    disp(['Remaining: ', datestr(datenum(0,0,0,0,0,timeLeft),'HH:MM:SS')]);
 end
 
 for i = 1:numel(SeedPixels)
-    VideoObjects{i} = CreateObject(SeedPixels(i), Pixels, pixelsSize, pixelNeighbourIndices);
+    VideoObjects{i} = CreateObject(SeedPixels(i), Pixels, pixelsSize, pixelNeighbourIndices, winSz);
 end
+
+VideoObjects = AmalgamateObjects(VideoObjects);
 
 %FOR TESTING PURPOSES
 %VideoObjects = Pixels;

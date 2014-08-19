@@ -1,6 +1,8 @@
-function SeedObject = CreateObject(seedPixel, pixels, pixelsSize, pixelNeighbourIndices)
+function SeedObject = CreateObject(seedPixel, pixels, pixelsSize, pixelNeighbourIndices, winSz)
 %CREATEOBJECT Creates an object mask associated with a seed pixel
 
+[y,x] = ind2sub(winSz, seedPixel.SeedIndex);
+SeedObject.AvgTrajectoryIndices = [y,x];
 SeedObject.Mask = false(pixelsSize);
 activeInds = seedPixel.PixelIndex;
 checkedInds = activeInds;
@@ -98,7 +100,7 @@ while ~isempty(activeInds)
     activeInds = [];
     for ind = newInds
         %need to fix the magic number based on window size
-        if pixels(ind).ErrorMap(seedPixel.SeedIndex) < 500
+        if pixels(ind).ErrorMap(seedPixel.SeedIndex) < pixels(seedPixel.PixelIndex).ErrorMap(seedPixel.SeedIndex)*1.5
             activeInds = [activeInds ind];
         end
     end
