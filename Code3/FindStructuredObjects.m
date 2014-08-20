@@ -34,11 +34,12 @@ Gradients(8) = 0;
 Pixel.ErrorMap(trajIndsCount) = 0;
 Pixel.StopCountMap(trajIndsCount) = 0;
 Pixel.SeedIndex = [];
+Pixel.PixelIndex = 0;
 for i=trajIndsCount:-1:1
     Pixel.GradientMap{i} = Gradients;
 end
 for i=pixelsSize(1)*pixelsSize(2)*pixelsSize(3):-1:1
-    Pixels(i) = Pixel;
+    Pixels{i} = Pixel;
 end
 SeedPixels = [];
 
@@ -48,46 +49,40 @@ for t = 1+tHalfWin:vidSz(3)-tHalfWin
     tPixInd = t - tHalfWin;
     
     for x = 1+xHalfWin:vidSz(2)-xHalfWin
-    disp(['  X: ', num2str(x-xHalfWin), ' of ', num2str(pixelsSize(2))]);
-            xPixInd = x - xHalfWin;
-            
-        for y = 1+yHalfWin:vidSz(1)-yHalfWin
-            yPixInd = y - yHalfWin;
-            
-            windowVideo = video(y-yHalfWin:y+yHalfWin,x-xHalfWin:x+xHalfWin,t-tHalfWin:t+tHalfWin);
-            
-            pixInd = sub2ind(pixelsSize, yPixInd, xPixInd, tPixInd);
-            Pixels(pixInd).PixelIndex = pixInd;
+        disp(['  X: ', num2str(x-xHalfWin), ' of ', num2str(pixelsSize(2))]);
+        xPixInd = x - xHalfWin;
+        
+        pixels = cell(pixelsSize(1),1);
+        parfor y = 1:pixelsSize(1)
+            yInd = y+yHalfWin;
+            pixels{y} = Pixel;
+            pixels{y}.PixelIndex = y;
+            windowVideo = video(y:y+2*yHalfWin,x-xHalfWin:x+xHalfWin,t-tHalfWin:t+tHalfWin);
             
             for i = 1:trajIndsCount
                 trajPixelVals = windowVideo(Window.TrajInds(i,:));
-                Pixels(pixInd).ErrorMap(i) = ComputeError(video(y, x, t), trajPixelVals);
+                pixels{y}.ErrorMap(i) = ComputeError(video(yInd, x, t), trajPixelVals);
             end
             
-%             pixel = Pixels(pixInd);
-%             error = zeros(trajIndsCount);
-%             parfor i = 1:trajIndsCount
-%                 trajPixelVals = windowVideo(Window.TrajInds(i,:));
-%                 error(i) = ComputeError(video(x, y, t), trajPixelVals);
+            for i = 1:trajIndsCount
+                pixelError = pixels{y}.ErrorMap(i);
+                neighbourPixelErrors = GetNeighbourPixelErrors(i, pixels{y}.ErrorMap, trajColSz, trajNeighbourIndices, trajIndsCount);
+                pixels{y}.GradientMap{i} = ComputeGradients(pixelError, neighbourPixelErrors);
+            end
+            
+            for i = 1:trajIndsCount
+                stopIndex = RunGradientDescent(i, pixels{y}.GradientMap, pixels{y}.ErrorMap, trajNeighbourIndices);
+                pixels{y}.StopCountMap(stopIndex) = pixels{y}.StopCountMap(stopIndex) + 1;
+            end
+            
+            pixels{y}.SeedIndex = FindMostLikelyTrajectoryIndex(pixels{y}.StopCountMap, trajStopCountThreshold);
+%             if ~isempty(Pixels(pixInd).SeedIndex)
+%                 SeedPixels = [SeedPixels Pixels(pixInd)];
 %             end
-%             pixel.ErrorMap = error;
             
-            for i = 1:trajIndsCount
-                pixelError = Pixels(pixInd).ErrorMap(i);
-                neighbourPixelErrors = GetNeighbourPixelErrors(i, Pixels(pixInd).ErrorMap, trajColSz, trajNeighbourIndices, trajIndsCount);
-                Pixels(pixInd).GradientMap{i} = ComputeGradients(pixelError, neighbourPixelErrors);
-            end
-            
-            for i = 1:trajIndsCount
-                stopIndex = RunGradientDescent(i, Pixels(pixInd).GradientMap, Pixels(pixInd).ErrorMap, trajNeighbourIndices);
-                Pixels(pixInd).StopCountMap(stopIndex) = Pixels(pixInd).StopCountMap(stopIndex) + 1;
-            end
-            
-            Pixels(pixInd).SeedIndex = FindMostLikelyTrajectoryIndex(Pixels(pixInd).StopCountMap, trajStopCountThreshold);
-            if ~isempty(Pixels(pixInd).SeedIndex)
-                SeedPixels = [SeedPixels Pixels(pixInd)];
-            end
         end
+        pixInds = bsxfun(@plus,(tPixInd-1)*pixelsSize(1)*pixelsSize(2) + (xPixInd-1)*pixelsSize(1), 1:pixelsSize(1));
+        Pixels(pixInds) = pixels;
     end
     
     loopTime = toc;
@@ -96,7 +91,13 @@ for t = 1+tHalfWin:vidSz(3)-tHalfWin
     disp(['Remaining: ', datestr(datenum(0,0,0,0,0,timeLeft),'HH:MM:SS')]);
 end
 
-for i = 1:numel(SeedPixels)
+for i = 1:numel(Pixels)
+    if ~isempty(Pixels{i}.SeedIndex)
+        SeedPixels = [SeedPixels Pixels{i}];
+    end
+end
+
+parfor i = 1:numel(SeedPixels)
     VideoObjects{i} = CreateObject(SeedPixels(i), Pixels, pixelsSize, pixelNeighbourIndices, winSz);
 end
 

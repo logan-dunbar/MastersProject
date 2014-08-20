@@ -100,7 +100,7 @@ while ~isempty(activeInds)
     activeInds = [];
     for ind = newInds
         %need to fix the magic number based on window size
-        if pixels(ind).ErrorMap(seedPixel.SeedIndex) < pixels(seedPixel.PixelIndex).ErrorMap(seedPixel.SeedIndex)*1.5
+        if pixels{ind}.ErrorMap(seedPixel.SeedIndex) < pixels{seedPixel.PixelIndex}.ErrorMap(seedPixel.SeedIndex)*1.5
             activeInds = [activeInds ind];
         end
     end
