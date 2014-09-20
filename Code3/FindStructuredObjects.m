@@ -28,9 +28,6 @@ trajNeighbourIndices = [-trajColSz-1, -trajColSz, -trajColSz+1, -1, +1, trajColS
 
 pixelColSz = pixelsSize(1);
 pixelNeighbourIndicesMid = [-pixelColSz-1, -pixelColSz, -pixelColSz+1, -1, 0, +1, pixelColSz-1, pixelColSz, pixelColSz+1];
-% pixelNeighbourIndicesFront = pixelNeighbourIndicesMid - (pixelsSize(1)*pixelsSize(2));
-% pixelNeighbourIndicesBack = pixelNeighbourIndicesMid + (pixelsSize(1)*pixelsSize(2));
-% pixelNeighbourIndices = [pixelNeighbourIndicesFront, pixelNeighbourIndicesMid, pixelNeighbourIndicesBack];
 pixelNeighbourIndices = pixelNeighbourIndicesMid;
 
 FrameObjects = {};
@@ -38,23 +35,16 @@ FrameObjects = {};
 % Pre-allocate all the things!
 Gradients = zeros(1,8);
 Pixel.ErrorMap = zeros(1,trajIndsCount);
-%Pixel.ErrorMap(trajIndsCount) = 0;
 Pixel.StopCountMap = zeros(1,trajIndsCount);
-%Pixel.StopCountMap(trajIndsCount) = 0;
 Pixel.SeedIndex = [];
 Pixel.PixelIndex = 0;
 for i=trajIndsCount:-1:1
     Pixel.GradientMap{i} = Gradients;
 end
 
-%for t = 1+tHalfWin:vidSz(3)-tHalfWin
-list = 11:8:30;
 for t = 1:pixelsSize(3)
-    %t = list(temp);
-    
     tTime = tic;
     disp(['T: ', num2str(t), ' of ', num2str(pixelsSize(3))]);
-    
     
     % Per frame allocation
     SeedPixels = [];
@@ -64,43 +54,28 @@ for t = 1:pixelsSize(3)
     end
 
     parfor x = 1:pixelsSize(2)
-    %for x = 1+xHalfWin:vidSz(2)-xHalfWin
         xTime = tic;
-%         disp(['   X: ', num2str(x-xHalfWin), ' of ', num2str(pixelsSize(2))]);
-%         xPixInd = x - xHalfWin;
         disp(['   X: ', num2str(x), ' of ', num2str(pixelsSize(2))]);
         
-            % Per frame allocation
-        %SeedPixels = [];
+        % Per column allocation
         ColumnPixels = cell(pixelsSize(1), 1);
         for i=pixelsSize(1):-1:1
             ColumnPixels{i} = Pixel;
         end
         
         
-        %for y = 1+yHalfWin:vidSz(1)-yHalfWin
         for y = 1:pixelsSize(1)
-        %for y = 247:vidSz(1)-yHalfWin
-%             yPixInd = y - yHalfWin;
-%             framePixInd = sub2ind(pixelsSize(1:2), yPixInd, xPixInd);
-            framePixInd = sub2ind(pixelsSize(1:2), y, x);
-            
-%             Pixels{y, x}.PixelIndex = framePixInd;
-            ColumnPixels{y}.PixelIndex = framePixInd;
+            ColumnPixels{y}.PixelIndex = sub2ind(pixelsSize(1:2), y, x);
             windowVideo = video(y:y+2*yHalfWin,x:x+2*xHalfWin,t:t+2*tHalfWin);
             
             %can vectorize this
             for i = 1:trajIndsCount
                 trajPixelVals = windowVideo(Window.TrajInds(i,:));
                 pixelVal = windowVideo(1+yHalfWin, 1+xHalfWin, 1+tHalfWin);
-%                 Pixels{y, x}.ErrorMap(i) = ComputeError(pixelVal, trajPixelVals);
                 ColumnPixels{y}.ErrorMap(i) = ComputeError(pixelVal, trajPixelVals);
             end
             
             for i = 1:trajIndsCount
-%                 pixelError = Pixels{y, x}.ErrorMap(i);
-%                 neighbourPixelErrors = GetNeighbourPixelErrors(i, Pixels{y, x}.ErrorMap, trajColSz, trajNeighbourIndices, trajIndsCount);
-%                 Pixels{y, x}.GradientMap{i} = ComputeGradients(pixelError, neighbourPixelErrors);
                 pixelError = ColumnPixels{y}.ErrorMap(i);
                 neighbourPixelErrors = GetNeighbourPixelErrors(i, ColumnPixels{y}.ErrorMap, trajColSz, trajNeighbourIndices, trajIndsCount);
                 ColumnPixels{y}.GradientMap{i} = ComputeGradients(pixelError, neighbourPixelErrors);
@@ -109,34 +84,21 @@ for t = 1:pixelsSize(3)
             shortCircuitMap = zeros(1, trajIndsCount);
             %randomize to get more short circuits quicker
             for i = randperm(trajIndsCount)
-            %for i = 253;
-                %disp(['y: ',num2str(y), ' i: ', num2str(i)]);
-%                 [stopIndex, shortCircuitMap] = RunGradientDescent(i, Pixels{y, x}.GradientMap, Pixels{y, x}.ErrorMap, trajNeighbourIndices, shortCircuitMap);
-%                 Pixels{y, x}.StopCountMap(stopIndex) = Pixels{y, x}.StopCountMap(stopIndex) + 1;
                 [stopIndex, shortCircuitMap] = RunGradientDescent(i, ColumnPixels{y}.GradientMap, ColumnPixels{y}.ErrorMap, trajNeighbourIndices, shortCircuitMap);
                 ColumnPixels{y}.StopCountMap(stopIndex) = ColumnPixels{y}.StopCountMap(stopIndex) + 1;
             end
             
-%             Pixels{y, x}.SeedIndex = FindMostLikelyTrajectoryIndex(Pixels{y, x}.StopCountMap, trajStopCountThreshold);
-%             if ~isempty(Pixels{y, x}.SeedIndex)
-%                 SeedPixels = [SeedPixels Pixels{y, x}];
-%             end
             ColumnPixels{y}.SeedIndex = FindMostLikelyTrajectoryIndex(ColumnPixels{y}.StopCountMap, trajStopCountThreshold);
             if ~isempty(ColumnPixels{y}.SeedIndex)
                 SeedPixels = [SeedPixels ColumnPixels{y}];
             end
         end
         
+        % sliced for parfor
         Pixels(:, x) = ColumnPixels;
         xTimeLeft = (pixelsSize(2) - x)*toc(xTime);
         disp(['    X Took: ', datestr(datenum(0,0,0,0,0,toc(xTime)),'HH:MM:SS'), ' - Remaining: ', datestr(datenum(0,0,0,0,0,xTimeLeft),'HH:MM:SS')]);
     end
-
-%     for i = 1:numel(Pixels)
-%         if ~isempty(Pixels{i}.SeedIndex)
-%             SeedPixels = [SeedPixels Pixels{i}];
-%         end
-%     end
     
     disp('Creating objects...');
     pixelObjects = {};
