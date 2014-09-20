@@ -27,7 +27,7 @@ while ~finished
         end
     end
     
-    if isempty(VideoObjects) || i == numel(VideoObjects)
+    if isempty(VideoObjects) || i == numel(VideoObjects) - 1
         finished = true;
     end
 end
@@ -44,7 +44,7 @@ if any(overlappingMask(:))
     obj2MeanTrajectoryIndex = mean(obj2.AvgTrajectoryIndices, 1);
     
     % Test starting points/trajectories are close enough
-    if abs(obj1MeanTrajectoryIndex(1)-obj2MeanTrajectoryIndex(1)) <= 1 && abs(obj1MeanTrajectoryIndex(2)-obj2MeanTrajectoryIndex(2)) <= 1
+    if abs(obj1MeanTrajectoryIndex(1)-obj2MeanTrajectoryIndex(1)) <= 2 && abs(obj1MeanTrajectoryIndex(2)-obj2MeanTrajectoryIndex(2)) <= 2
         CombinedObj = obj1;
         CombinedObj.Mask = obj1.Mask | obj2.Mask;
         CombinedObj.AvgTrajectoryIndices = [obj1.AvgTrajectoryIndices;obj2.AvgTrajectoryIndices];
