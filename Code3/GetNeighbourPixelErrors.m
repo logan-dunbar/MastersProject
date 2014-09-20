@@ -4,7 +4,7 @@ function NeighbourPixelErrors = GetNeighbourPixelErrors(index, errorMap, trajCol
 %produce a gradient of 0 going out the edges.
 
 pixelError = errorMap(index);
-NeighbourPixelErrors = repmat(pixelError, 1, 8);
+NeighbourPixelErrors(1:8) = pixelError;
 
 % Left
 if (index <= trajColSz)

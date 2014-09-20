@@ -5,6 +5,7 @@ function Window = CreateWindow(winSz)
 Window.PixelIndex = ceil(winSz/2);
 Window.TrajInds(winSz(1)*winSz(2), winSz(3)) = 0;
 
+% test = [];
 for y = 1:winSz(1)
     for x = 1:winSz(2)
         yStart = y;
@@ -17,13 +18,18 @@ for y = 1:winSz(1)
         
         for t = 1:winSz(3)
             yInd = yStart + (t-1)*yStepSize;
+            xInd = xStart + (t-1)*xStepSize;
+            
+%             if yStart == 11 && xStart == 14
+%                 test(t,1:2) = [yInd xInd];
+%             end
+            
             if yInd < Window.PixelIndex(1)
                 yInd = ceil(yInd);
             else
                 yInd = floor(yInd);
             end
             
-            xInd = xStart + (t-1)*xStepSize;
             if xInd < Window.PixelIndex(2)
                 xInd = ceil(xInd);
             else
