@@ -72,7 +72,7 @@ for t = 1:pixelsSize(3)
         
             % Per frame allocation
         %SeedPixels = [];
-        ColumnPixels = cell(pixelsSize(1));
+        ColumnPixels = cell(pixelsSize(1), 1);
         for i=pixelsSize(1):-1:1
             ColumnPixels{i} = Pixel;
         end
@@ -127,7 +127,7 @@ for t = 1:pixelsSize(3)
             end
         end
         
-        Pixels{:, x} = ColumnPixels;
+        Pixels(:, x) = ColumnPixels;
         xTimeLeft = (pixelsSize(2) - x)*toc(xTime);
         disp(['    X Took: ', datestr(datenum(0,0,0,0,0,toc(xTime)),'HH:MM:SS'), ' - Remaining: ', datestr(datenum(0,0,0,0,0,xTimeLeft),'HH:MM:SS')]);
     end
